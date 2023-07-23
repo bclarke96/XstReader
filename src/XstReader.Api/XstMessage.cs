@@ -107,13 +107,22 @@ namespace XstReader
         [Category(@"Message Properties")]
         [Description(@"Contains a list of the primary recipient display names, separated by semicolons, when an email message has primary recipients .")]
         public virtual string To => Properties[PropertyCanonicalName.PidTagDisplayTo]?.ValueAsStringSanitized;
-        /// <summary>
+        
+		/// <summary>
         /// The From Summary of the Message
         /// </summary>
         [DisplayName("Sender Name")]
         [Category(@"Address Properties")]
         [Description(@"Contains the display name of the sending mailbox owner.")]
         public virtual string From => Properties[PropertyCanonicalName.PidTagSenderName]?.ValueAsStringSanitized;
+		
+		/// <summary>
+        /// The From Summary of the Message
+        /// </summary>
+        [DisplayName("Sender SMTP Address")]
+        [Category(@"Address Properties")]
+        [Description(@"Contains the SMTP address of the sending mailbox owner.")]
+		public virtual string FromSmtpAddress => Properties[PropertyCanonicalName.PidTagSenderSmtpAddress]?.ValueAsStringSanitized;
 
         /// <summary>
         /// Indicates if the Message is sent in representation of other 
@@ -535,6 +544,8 @@ namespace XstReader
                 formatList.Add(XstMessageBodyFormat.Rtf);
             if (IsBodyPlainText)
                 formatList.Add(XstMessageBodyFormat.PlainText);
+			if (formatList.Count == 0)
+				formatList.Add(XstMessageBodyFormat.PlainText);
 
             return formatList;
         }
