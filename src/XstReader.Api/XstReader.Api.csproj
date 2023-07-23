@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>XstReader</RootNamespace>
-    <Version>1.0.7</Version>
-    <AssemblyVersion>1.0.7</AssemblyVersion>
-    <FileVersion>1.0.7</FileVersion>
+    <Version>1.0.8</Version>
+    <AssemblyVersion>1.0.8</AssemblyVersion>
+    <FileVersion>1.0.8</FileVersion>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>iluvadev</Authors>

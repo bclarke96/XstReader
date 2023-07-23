@@ -7,8 +7,11 @@ The differences from the export capabilities of the UI are: the ability to expor
 
 In addition to XstExporter, XstExporter.Portable is also provided, which is a portable version based on .Net Core 2.1 that can be run on Windows, Mac, Linux etc. 
 
-Both versions support the following options:
+XstExporter supports the following options:
 
+   XstExport.exe {-e|-p|-a|-h} [-f=`<Outlook folder>`] [-se=<Sender>] [-su=<Subject>] [-mint=<Minimum time>] [-maxt=<Maximum time>] [-o] [-s] [-t=`<target directory>`] `<Outlook file name>`
+
+XstExporter.Portable support the following options (filtering capabilties to be added in later release):
    XstExporter.exe {-e|-p|-a|-h} [-f=`<Outlook folder>`] [-o] [-s] [-t=`<target directory>`] `<Outlook file name>`
 
 Where:
@@ -37,6 +40,20 @@ Where:
    -s, --subfolders  
       If set, Outlook subfolder structure is preserved.
       Otherwise, all output goes to a single directory
+   
+   -se, --sender
+      If set, Outlook will export based on the specified sender. This filter only applies when --email or --attachments is used, it will not filter for --properties.
+
+   -su, --subject
+      If set, Outlook will export based on the specified subject. This filter only applies when --email or --attachments is used, it will not filter for --properties.
+
+   -mint, --mintime
+      If set, Outlook will export emails only after the minimum time specified based on the email received time. This filter only applies when --email or --attachments is used, it will not filter for --properties.
+	  For example '2023-07-18 09:00:00' will export emails received after 9 AM on the 18th July 2023.
+
+   -maxt, --maxtime
+      If set, Outlook will export emails only before the maximum time specified based on the email received time. This filter only applies when --email or --attachments is used, it will not filter for --properties.
+	  For example '2023-07-18 09:00:00 will export emails received before 9 AM on the 18th July 2023.
 
    -t=`<target directory name>`, --target=`<target directory name>`  
       The directory to which output is written. This may be an

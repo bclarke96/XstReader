@@ -25,7 +25,7 @@ namespace XstExporter
             "",
             "Usage:",
             "",
-            "   XstExport.exe {-e|-p|-a|-h} [-f=<Outlook folder>] [-o] [-s]",
+            "   XstExport.exe {-e|-p|-a|-h} [-f=<Outlook folder>] [-se=<Sender>] [-su=<Subject>] [-mint=<Minimum time>] [-maxt=<Maximum time>] [-o] [-s]",
             "                 [-t=<target directory>] <Outlook file name>",
             "",
             "Where:",
@@ -54,6 +54,20 @@ namespace XstExporter
             "   -s, --subfolders",
             "      If set, Outlook subfolder structure is preserved.",
             "      Otherwise, all output goes to a single directory",
+			"",
+            "   -se, --sender",
+            "      If set, Outlook will export based on the specified sender. This filter only applies when --email or --attachments is used, it will not filter for --properties.",
+			"",
+            "   -su, --subject",
+            "      If set, Outlook will export based on the specified subject. This filter only applies when --email or --attachments is used, it will not filter for --properties.",
+			"",
+            "   -mint, --mintime",
+            "      If set, Outlook will export emails only after the minimum time specified. This filter only applies when --email or --attachments is used, it will not filter for --properties.",
+			"      For example '2023-07-18 09:00:00' will export emails received after 9 AM on the 18th July 2023.",
+			"",
+            "   -maxt, --maxtime",
+            "      If set, Outlook will export emails only before the maximum time specified. This filter only applies when --email or --attachments is used, it will not filter for --properties.",
+			"      For example '2023-07-18 09:00:00 will export emails received before 9 AM on the 18th July 2023.",
             "",
             "   -t=<target directory name>, --target=<target directory name>",
             "      The directory to which output is written. This may be an",
@@ -82,6 +96,10 @@ namespace XstExporter
             bool only = false;
             bool subfolders = false;
             string exportDir = null;
+			string sender = null;
+			string subject = null;
+			string mintime = null;
+			string maxtime = null;
 
             try
             {
@@ -94,6 +112,10 @@ namespace XstExporter
                     { "o|only", v => only = true },
                     { "s|subfolders", v => subfolders = true },
                     { "t|target=", v => exportDir = v },
+					{ "se|sender=", v => sender = v },
+					{ "su|subject=", v => subject = v },
+					{ "mint|mintime=", v => mintime = v },
+					{ "maxt|maxtime=", v => maxtime = v },
                 };
                 List<string> outlookFiles = argParser.Parse(args);
 
@@ -132,6 +154,26 @@ namespace XstExporter
                         ErrorCode = WindowsErrorCodes.ERROR_FILE_NOT_FOUND
                     };
                 }
+				
+				DateTime mintime_datetime = new DateTime();
+				if (mintime != null && !DateTime.TryParse(mintime, out mintime_datetime))
+				{
+					throw new XstExportException
+                    {
+                        Description = "A valid datetime was not specified. Try specifying a valid date such as '2023-07-18' or datetime such as '2023-07-18 09:00:00'.",
+                        ErrorCode = WindowsErrorCodes.ERROR_INVALID_PARAMETER
+                    };
+				}				
+				
+				DateTime maxtime_datetime = new DateTime();
+				if (maxtime != null && !DateTime.TryParse(maxtime, out maxtime_datetime))
+				{
+					throw new XstExportException
+                    {
+                        Description = "A valid datetime was not specified. Try specifying a valid date such as '2023-07-18' or datetime such as '2023-07-18 09:00:00'.",
+                        ErrorCode = WindowsErrorCodes.ERROR_INVALID_PARAMETER
+                    };
+				}
 
                 if (exportDir != null)
                 {
@@ -192,7 +234,7 @@ namespace XstExporter
                         else
                             targetDir = exportDir;
 
-                        ExportFolder(f, command, targetDir);
+                        ExportFolder(f, command, targetDir, sender, subject, mintime, maxtime);
                     }
                 }
             }
@@ -218,7 +260,7 @@ namespace XstExporter
             return 0;
         }
 
-        private static void ExportFolder(XstFolder folder, Command command, string exportDir)
+        private static void ExportFolder(XstFolder folder, Command command, string exportDir, string sender, string subject, string mintime, string maxtime)
         {
             if (folder.ContentCount == 0)
             {
@@ -236,13 +278,13 @@ namespace XstExporter
             switch (command)
             {
                 case Command.Email:
-                    ExtractEmailsInFolder(folder, exportDir);
+                    ExtractEmailsInFolder(folder, exportDir, sender, subject, mintime, maxtime);
                     break;
                 case Command.Properties:
                     ExtractPropertiesInFolder(folder, exportDir);
                     break;
                 case Command.Attachments:
-                    ExtractAttachmentsInFolder(folder, exportDir);
+                    ExtractAttachmentsInFolder(folder, exportDir, sender, subject, mintime, maxtime);
                     break;
                 case Command.Help:
                 default:
@@ -322,7 +364,7 @@ namespace XstExporter
             return filename.ReplaceInvalidFileNameChars("");
         }
 
-        private static void ExtractEmailsInFolder(XstFolder folder, string exportDirectory)
+        private static void ExtractEmailsInFolder(XstFolder folder, string exportDirectory, string sender, string subject, string mintime, string maxtime)
         {
             XstMessage current = null;
             int good = 0, bad = 0;
@@ -339,8 +381,57 @@ namespace XstExporter
                     current = m;
                     formatter.Message = m;
                     string fileName = formatter.ExportFileName;
+					
+					try
+					{
+						if (sender != null && formatter.Message.FromSmtpAddress.ToLower() != sender.ToLower())
+						{
+							continue;
+						}
+					}
+					catch 
+					{
+						continue;
+					}
+					
+					try
+					{
+						if (subject != null && !formatter.Message.Subject.ToLower().Contains(subject.ToLower()))
+						{
+							continue;
+						}
+					}
+					catch 
+					{
+						continue;
+					}
+					
+					try 
+					{
+						if (mintime != null && formatter.Message.ReceivedTime < DateTime.Parse(mintime))
+						{
+							continue;
+						}
+					}
+					catch 
+					{
+						continue;
+					}
+					
+					try 
+					{
+						if (maxtime != null && formatter.Message.ReceivedTime > DateTime.Parse(maxtime))
+						{
+							continue;
+						}
+					}
+					catch
+					{
+						continue;
+					}
+
                     for (int i = 1; ; i++)
-                    {
+                    {						
                         if (!usedNames.Contains(fileName))
                         {
                             usedNames.Add(fileName);
@@ -370,12 +461,60 @@ namespace XstExporter
             folder.Messages.SavePropertiesToFile(fileName);
         }
 
-        private static void ExtractAttachmentsInFolder(XstFolder folder, string exportDirectory)
+        private static void ExtractAttachmentsInFolder(XstFolder folder, string exportDirectory, string sender, string subject, string mintime, string maxtime)
         {
             int good = 0, bad = 0;
 
             foreach (var message in folder.Messages)
             {
+				try
+				{
+					if (sender != null && message.FromSmtpAddress.ToLower() != sender.ToLower())
+					{
+						continue;
+					}
+				}
+				catch 
+				{
+					continue;
+				}
+				
+				try
+				{
+					if (subject != null && !message.Subject.ToLower().Contains(subject.ToLower()))
+					{
+						continue;
+					}
+				}
+				catch 
+				{
+					continue;
+				}
+				
+				try 
+				{
+					if (mintime != null && message.ReceivedTime < DateTime.Parse(mintime))
+					{
+						continue;
+					}
+				}
+				catch 
+				{
+					continue;
+				}
+				
+				try 
+				{
+					if (maxtime != null && message.ReceivedTime > DateTime.Parse(maxtime))
+					{
+						continue;
+					}
+				}
+				catch
+				{
+					continue;
+				}
+				
                 try
                 {
                     foreach (var att in message.Attachments)

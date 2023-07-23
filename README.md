@@ -37,6 +37,7 @@ More information in [XstReader.md](./XstReader.md)
 A Command Line tool for exporting emails, attachments or properties from an Microsoft Outlook's .ost and .pst file:
 * With the ability to export from a subtree of Outlook folders
 * Can export attachments only, without the body of the email.
+* Can filter what is exported based off either the sender, subject, minimum time or maximum time the email was received (only in the Windows version for now).
 * Is built over .Net Framework 4.6.1 (for Windows)
 * There is a *Portable* version based on .Net Core 2.1 (cross-platform)
 

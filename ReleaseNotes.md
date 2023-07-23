@@ -19,6 +19,14 @@
 **XstReader.Api v.1.0.2**:
 * Fixed error with intellisense in nuget package
 
+## 2023-07-23
+**XstEporter v2.0.8:
+* Added command line filters for XstExporter to be able to filter what is exported based off either the sender, subject, minimum time or maximum time the email was received. This only works with when exporting with '--email' or '--attachments' set ('--properties' will not work with the filters yes as the properties export is a lot faster and therefore wasn't a requirement just yet).
+
+**XstReader.Api v1.0.8
+* Fixed issue in GetBodyFormats where for items such as those in the folder "Recipient Cache" it wasn't getting the body format. It will now default to plaintext if no other formats found.
+* Added Sender SMTP Address (PidTagSenderSmtpAddress) to the Message properties.
+
 ## 2022-01-26
 **All projects**:
 * New folder structure for code

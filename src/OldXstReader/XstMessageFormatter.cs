@@ -43,7 +43,7 @@ namespace XstReader
                : "txt";
 
         private string _ExportFileName = null;
-        public string ExportFileName => _ExportFileName ?? (_ExportFileName = String.Format("{0:yyyy-MM-dd HHmm} {1}", Message?.Date, Message?.Subject).Truncate(150).ReplaceInvalidFileNameChars(" "));
+        public string ExportFileName => _ExportFileName ?? String.Format("{0:yyyy-MM-dd HHmm} {1}", Message?.Date, Message?.Subject).Truncate(150).ReplaceInvalidFileNameChars(" ");
 
         private XstRecipient OriginatorRecipient => Message.Recipients[RecipientType.Originator].FirstOrDefault();
         private IEnumerable<XstRecipient> ToRecipients => Message.Recipients[RecipientType.To];
